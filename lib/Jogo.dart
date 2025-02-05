@@ -8,28 +8,33 @@ class Jogo extends StatefulWidget {
 
 class _JogoState extends State<Jogo> {
   var _imagemApp = AssetImage("images/padrao.png");
-  var _mensagem = "Escolha uma opção abaixo";
+  String _mensagem = "Escolha uma opção abaixo";
+  final Random _random = Random();
+  final List<String> _opcoes = ["pedra", "papel", "tesoura"];
+  final Map<String, String> _regras = {"pedra": "tesoura", "papel": "pedra", "tesoura": "papel"};
 
   // Função que gera a jogada do app e valida a escolha do usuário
-  void _opcaoSelecionada(String escolhaUsuario) {
-    final opcoes = ["pedra", "papel", "tesoura"];
-    final escolhaApp = opcoes[Random().nextInt(3)];
-
-    final regras = {"pedra": "tesoura", "papel": "pedra", "tesoura": "papel"};
+  void _opcaoSelecionada(String escolhaUsuario, {String? escolhaAppSimulada}) {
+    final escolhaApp = escolhaAppSimulada ?? _opcoes[_random.nextInt(3)];
 
     setState(() {
       _imagemApp = AssetImage("images/$escolhaApp.png");
-      if (escolhaUsuario == escolhaApp) {
-        _mensagem = "Empatou! Ninguém Ganhou...";
-      } else if (regras[escolhaUsuario] == escolhaApp) {
-        _mensagem = "Você Ganhou!!";
-      } else {
-        _mensagem = "Você Perdeu!!";
-      }
+      _mensagem = _determineResultado(escolhaUsuario, escolhaApp);
     });
   }
 
-  // Constantes para as imagens
+  // Função para determinar o resultado do jogo
+  String _determineResultado(String escolhaUsuario, String escolhaApp) {
+    if (escolhaUsuario == escolhaApp) {
+      return "Empatou! Ninguém Ganhou...";
+    } else if (_regras[escolhaUsuario] == escolhaApp) {
+      return "Você Ganhou!!";
+    } else {
+      return "Você Perdeu!!";
+    }
+  }
+
+  // Lista de imagens para as opções
   final List<String> opcoesImagens = [
     'images/pedra.png',
     'images/papel.png',
@@ -95,18 +100,26 @@ class _JogoState extends State<Jogo> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
-          // Usando o Row para as opções
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: opcoesImagens.map((imagem) {
+          // Usando GridView para as opções
+          GridView.builder(
+            shrinkWrap: true,
+            itemCount: _opcoes.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              mainAxisSpacing: 20,
+              crossAxisSpacing: 20,
+            ),
+            itemBuilder: (context, index) {
+              final escolha = _opcoes[index];
               return GestureDetector(
-                onTap: () => _opcaoSelecionada(imagem.split('/').last.split('.').first),
+                key: Key(escolha),
+                onTap: () => _opcaoSelecionada(escolha),
                 child: Image.asset(
-                  imagem,
+                  'images/$escolha.png',
                   height: 100,
                 ),
               );
-            }).toList(),
+            },
           ),
         ],
       ),
